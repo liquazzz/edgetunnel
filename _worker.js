@@ -278,13 +278,16 @@ export default {
 					const 订阅TOKEN = await MD5MD5(host + userID), 作为优选订阅生成器 = ['1', 'true'].includes(env.BEST_SUB) && url.searchParams.get('host') === 'example.com' && url.searchParams.get('uuid') === '00000000-0000-4000-8000-000000000000' && UA.toLowerCase().includes('tunnel (https://github.com/cmliu/edge');
 					const 请求TOKEN = url.searchParams.get('token');
 					const 用户客户端请求订阅 = 请求TOKEN === 订阅TOKEN;
-					const 当前日序号 = Math.floor(Date.now() / 86400000);
-					const 订阅转换后端TOKEN种子 = base64SecretEncode(订阅TOKEN, userID);
-					const [今日订阅转换后端专属TOKEN, 昨日订阅转换后端专属TOKEN] = await Promise.all([
-						MD5MD5(订阅转换后端TOKEN种子 + 当前日序号),
-						MD5MD5(订阅转换后端TOKEN种子 + (当前日序号 - 1)),
-					]);
-					const 订阅转换后端请求订阅 = 请求TOKEN === 今日订阅转换后端专属TOKEN || 请求TOKEN === 昨日订阅转换后端专属TOKEN;
+					let 订阅转换后端请求订阅 = false;
+					if (请求TOKEN && !用户客户端请求订阅 && !作为优选订阅生成器) {
+						const 当前日序号 = Math.floor(Date.now() / 86400000);
+						const 订阅转换后端TOKEN种子 = base64SecretEncode(订阅TOKEN, userID);
+						const [今日订阅转换后端专属TOKEN, 昨日订阅转换后端专属TOKEN] = await Promise.all([
+							MD5MD5(订阅转换后端TOKEN种子 + 当前日序号),
+							MD5MD5(订阅转换后端TOKEN种子 + (当前日序号 - 1)),
+						]);
+						订阅转换后端请求订阅 = 请求TOKEN === 今日订阅转换后端专属TOKEN || 请求TOKEN === 昨日订阅转换后端专属TOKEN;
+					}
 					if (用户客户端请求订阅 || 订阅转换后端请求订阅 || 作为优选订阅生成器) {
 						config_JSON = await 读取config_JSON(env, host, userID, UA);
 						if (作为优选订阅生成器) ctx.waitUntil(请求日志记录(env, request, 访问IP, 'Get_Best_SUB', config_JSON, false));
